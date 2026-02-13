@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setStatus(`Sending ${connections.length} connections to app...`);
       setProgress(90);
 
-      const appUrl = appUrlInput.value.trim() || DEFAULT_URL;
+      const appUrl = (appUrlInput.value.trim() || DEFAULT_URL).replace(/\/+$/, '');
       const res = await fetch(`${appUrl}/api/import-connections`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

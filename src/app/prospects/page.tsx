@@ -31,7 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Trash2, ChevronDown, ExternalLink, Search } from 'lucide-react';
+import { Trash2, ChevronDown, ExternalLink, Search, CheckSquare, XSquare } from 'lucide-react';
 import { deduplicateProspects } from '@/lib/csv-parser';
 import type { Prospect, ProspectStatus } from '@/lib/types';
 import { toast } from 'sonner';
@@ -194,6 +194,20 @@ export default function ProspectsPage() {
           <span className="text-sm text-muted-foreground">
             Showing {filtered.length} of {prospects.length}
           </span>
+        )}
+        {filtered.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAll}
+            className="ml-auto whitespace-nowrap"
+          >
+            {allSelected ? (
+              <><XSquare className="mr-1 h-4 w-4" /> Deselect All</>
+            ) : (
+              <><CheckSquare className="mr-1 h-4 w-4" /> Select All ({filtered.length})</>
+            )}
+          </Button>
         )}
       </div>
 
