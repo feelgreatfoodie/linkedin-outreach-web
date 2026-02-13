@@ -5,16 +5,40 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      width: 360px;
+      width: 380px;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       color: #1a1a1a;
     }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
     h1 {
       font-size: 16px;
       font-weight: 700;
-      margin-bottom: 4px;
+    }
+    .help-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #0a66c2;
+      background: white;
+      color: #0a66c2;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .help-btn:hover {
+      background: #0a66c2;
+      color: white;
     }
     .subtitle {
       font-size: 12px;
@@ -31,6 +55,21 @@
       margin-bottom: 4px;
       color: #444;
     }
+    .config .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .config .label-hint {
+      font-size: 11px;
+      color: #0a66c2;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .config .label-hint:hover {
+      text-decoration: underline;
+    }
     .config input {
       width: 100%;
       padding: 8px 10px;
@@ -41,6 +80,13 @@
     }
     .config input:focus {
       border-color: #0a66c2;
+      box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.1);
+    }
+    .url-hint {
+      font-size: 11px;
+      color: #999;
+      margin-top: 4px;
+      line-height: 1.4;
     }
     .btn {
       width: 100%;
@@ -98,11 +144,27 @@
     .not-on-page p {
       margin-bottom: 12px;
       color: #666;
+      line-height: 1.5;
     }
     .not-on-page a {
-      color: #0a66c2;
+      display: inline-block;
+      color: white;
+      background: #0a66c2;
       text-decoration: none;
       font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .not-on-page a:hover { background: #004182; }
+    .not-on-page .help-link {
+      display: block;
+      margin-top: 16px;
+      color: #0a66c2;
+      background: none;
+      padding: 0;
+      font-size: 12px;
+      cursor: pointer;
     }
     .results {
       margin-top: 12px;
@@ -116,16 +178,185 @@
       font-weight: 700;
       color: #0a66c2;
     }
+
+    /* ── Help Guide Overlay ── */
+    .guide-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: white;
+      z-index: 100;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .guide-overlay.visible { display: block; }
+    .guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .guide-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0a66c2;
+    }
+    .guide-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: #f3f3f3;
+      font-size: 16px;
+      cursor: pointer;
+      color: #666;
+    }
+    .guide-close:hover { background: #e5e5e5; }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .step:last-child { border-bottom: none; margin-bottom: 0; }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0a66c2;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #1a1a1a;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .step-desc strong { color: #1a1a1a; }
+    .step-desc code {
+      background: #f3f3f3;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: 'SF Mono', 'Menlo', monospace;
+      word-break: break-all;
+    }
+    .step-callout {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .step-callout.tip {
+      background: #f0f7ff;
+      border-left: 3px solid #0a66c2;
+      color: #333;
+    }
+    .step-callout.warning {
+      background: #fff8e1;
+      border-left: 3px solid #f9a825;
+      color: #5d4037;
+    }
+    .step-callout.success {
+      background: #e8f5e9;
+      border-left: 3px solid #2e7d32;
+      color: #1b5e20;
+    }
+
+    .guide-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    .guide-footer p {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.5;
+    }
+    .guide-footer a {
+      color: #0a66c2;
+      text-decoration: none;
+    }
+
+    /* Navigation dots for guide pages */
+    .guide-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+    .guide-nav button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .guide-nav .nav-prev {
+      background: #f3f3f3;
+      color: #333;
+    }
+    .guide-nav .nav-prev:hover { background: #e5e5e5; }
+    .guide-nav .nav-prev:disabled { opacity: 0.3; cursor: not-allowed; }
+    .guide-nav .nav-next {
+      background: #0a66c2;
+      color: white;
+    }
+    .guide-nav .nav-next:hover { background: #004182; }
+    .guide-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .guide-dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ddd;
+    }
+    .guide-dots .dot.active { background: #0a66c2; }
+    .guide-page { display: none; }
+    .guide-page.visible { display: block; }
   </style>
 </head>
 <body>
-  <h1>LinkedIn Outreach</h1>
+  <div class="header">
+    <h1>LinkedIn Outreach</h1>
+    <button class="help-btn" id="help-btn" title="How to use this extension">?</button>
+  </div>
   <p class="subtitle">Export connections to your outreach app</p>
 
   <div id="content-ready" style="display:none">
     <div class="config">
-      <label for="app-url">App URL</label>
-      <input type="text" id="app-url" placeholder="https://your-app.vercel.app" />
+      <div class="label-row">
+        <label for="app-url">App URL</label>
+        <span class="label-hint" id="url-help-link">What goes here?</span>
+      </div>
+      <input type="text" id="app-url" placeholder="https://linkedin-outreach-web.vercel.app" />
+      <p class="url-hint">
+        Paste your deployed app URL here (e.g. linkedin-outreach-web.vercel.app)
+      </p>
     </div>
 
     <button id="scrape-btn" class="btn btn-primary">
@@ -142,11 +373,148 @@
 
   <div id="content-wrong-page" style="display:none">
     <div class="not-on-page">
-      <p>Navigate to your LinkedIn connections page first:</p>
+      <p>You need to be on your LinkedIn connections page to use this tool.</p>
       <a href="https://www.linkedin.com/mynetwork/invite-connect/connections/"
          target="_blank" id="open-linkedin">
-        Open LinkedIn Connections
+        Go to My Connections
       </a>
+      <a class="help-link" id="wrong-page-help">Need help? View the full guide</a>
+    </div>
+  </div>
+
+  <!-- ── Help Guide Overlay ── -->
+  <div class="guide-overlay" id="guide-overlay">
+    <div class="guide-header">
+      <h2>How to Export Connections</h2>
+      <button class="guide-close" id="guide-close">&times;</button>
+    </div>
+
+    <!-- Page 1: Setup -->
+    <div class="guide-page visible" id="guide-page-1">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Open your LinkedIn connections</div>
+          <div class="step-desc">
+            In Chrome, go to <strong>linkedin.com</strong> and make sure you are signed in.
+            Then navigate to your connections page:
+            <br><br>
+            <code>linkedin.com/mynetwork/invite-connect/connections/</code>
+            <div class="step-callout tip">
+              <strong>Shortcut:</strong> Click the "Go to My Connections" button in this extension when you see the "wrong page" message. It will open the right page for you.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Click this extension icon</div>
+          <div class="step-desc">
+            Once you are on your LinkedIn connections page, click the <strong>LinkedIn Outreach</strong> extension icon in your Chrome toolbar (top-right of your browser).
+            <div class="step-callout tip">
+              <strong>Can't find it?</strong> Click the puzzle piece icon in Chrome's toolbar to see all your extensions, then click the pin icon next to "LinkedIn Outreach Exporter" so it's always visible.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 2: App URL -->
+    <div class="guide-page" id="guide-page-2">
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Set your App URL</div>
+          <div class="step-desc">
+            This is the web address of your LinkedIn Outreach app. You need to paste your <strong>deployed app URL</strong> here so the extension knows where to send your connections.
+            <br><br>
+            Your App URL looks something like:
+            <br>
+            <code>https://linkedin-outreach-web.vercel.app</code>
+            <div class="step-callout warning">
+              <strong>Important:</strong> The default value is <code>http://localhost:3000</code> which only works if you are running the app on your own computer. For the live/deployed version, you <strong>must</strong> replace this with your actual app URL.
+            </div>
+            <div class="step-callout tip">
+              <strong>Where do I find my URL?</strong> It's the web address you see in your browser's address bar when you open the LinkedIn Outreach app. Copy the whole thing (starting with https://) and paste it into the App URL field.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 3: Scrape -->
+    <div class="guide-page" id="guide-page-3">
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Click "Scrape &amp; Send to App"</div>
+          <div class="step-desc">
+            Press the blue <strong>"Scrape &amp; Send to App"</strong> button. The extension will:
+            <br><br>
+            &bull; Read all visible connections on the page<br>
+            &bull; Automatically click "Load more" to get the rest<br>
+            &bull; Send everything to your app
+            <div class="step-callout warning">
+              <strong>Don't close the tab!</strong> Keep the LinkedIn tab open and active while the scrape is running. You'll see a progress bar showing how far along it is.
+            </div>
+            <div class="step-callout tip">
+              <strong>How long does this take?</strong> It depends on how many connections you have. Under 100 takes about 30 seconds. 500+ connections may take 2-3 minutes. 1000+ may take up to 5 minutes. Just let it run!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 4: Done -->
+    <div class="guide-page" id="guide-page-4">
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">View your connections in the app</div>
+          <div class="step-desc">
+            Once the scrape finishes, you'll see a success message with the number of connections imported. Now:
+            <br><br>
+            &bull; Open your LinkedIn Outreach app in a new tab<br>
+            &bull; Go to the <strong>Prospects</strong> page<br>
+            &bull; All your LinkedIn connections will be there, ready to use!
+            <div class="step-callout success">
+              <strong>That's it!</strong> Your connections are now in the app. You can filter them, select who you want to reach out to, and generate personalized outreach sequences.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-content">
+          <div class="step-title">Alternative: Download as CSV</div>
+          <div class="step-desc">
+            If you prefer, click <strong>"Download CSV Instead"</strong> to save a spreadsheet file to your computer. You can then import it manually in the app's Prospects page using the "Import CSV" button.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="guide-nav">
+      <button class="nav-prev" id="guide-prev" disabled>Back</button>
+      <div class="guide-dots">
+        <div class="dot active" data-page="1"></div>
+        <div class="dot" data-page="2"></div>
+        <div class="dot" data-page="3"></div>
+        <div class="dot" data-page="4"></div>
+      </div>
+      <button class="nav-next" id="guide-next">Next</button>
+    </div>
+
+    <div class="guide-footer">
+      <p>
+        Having trouble? Visit the
+        <a href="https://github.com/feelgreatfoodie/linkedin-outreach-web" target="_blank">GitHub repo</a>
+        for more help.
+      </p>
     </div>
   </div>
 

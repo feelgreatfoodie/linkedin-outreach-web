@@ -1,5 +1,6 @@
 const APP_URL_KEY = 'outreach_app_url';
-const DEFAULT_URL = 'http://localhost:3000';
+const SEEN_GUIDE_KEY = 'outreach_seen_guide';
+const DEFAULT_URL = 'https://linkedin-outreach-web.vercel.app';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const appUrlInput = document.getElementById('app-url');
@@ -11,6 +12,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   const resultsEl = document.getElementById('results');
   const contentReady = document.getElementById('content-ready');
   const contentWrongPage = document.getElementById('content-wrong-page');
+
+  // ── Help Guide Navigation ──
+  const guideOverlay = document.getElementById('guide-overlay');
+  const guidePages = document.querySelectorAll('.guide-page');
+  const guideDots = document.querySelectorAll('.guide-dots .dot');
+  const guidePrev = document.getElementById('guide-prev');
+  const guideNext = document.getElementById('guide-next');
+  let guidePage = 1;
+  const totalPages = guidePages.length;
+
+  function showGuidePage(page) {
+    guidePage = page;
+    guidePages.forEach((p, i) => p.classList.toggle('visible', i === page - 1));
+    guideDots.forEach((d, i) => d.classList.toggle('active', i === page - 1));
+    guidePrev.disabled = page === 1;
+    guideNext.textContent = page === totalPages ? 'Got It' : 'Next';
+  }
+
+  function openGuide(startPage) {
+    showGuidePage(startPage || 1);
+    guideOverlay.classList.add('visible');
+  }
+
+  function closeGuide() {
+    guideOverlay.classList.remove('visible');
+    chrome.storage.local.set({ [SEEN_GUIDE_KEY]: true });
+  }
+
+  document.getElementById('help-btn').addEventListener('click', () => openGuide(1));
+  document.getElementById('guide-close').addEventListener('click', closeGuide);
+  const urlHelpLink = document.getElementById('url-help-link');
+  if (urlHelpLink) urlHelpLink.addEventListener('click', () => openGuide(2));
+  const wrongPageHelp = document.getElementById('wrong-page-help');
+  if (wrongPageHelp) wrongPageHelp.addEventListener('click', () => openGuide(1));
+
+  guidePrev.addEventListener('click', () => {
+    if (guidePage > 1) showGuidePage(guidePage - 1);
+  });
+  guideNext.addEventListener('click', () => {
+    if (guidePage < totalPages) showGuidePage(guidePage + 1);
+    else closeGuide();
+  });
+  guideDots.forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const page = parseInt(dot.getAttribute('data-page'), 10);
+      if (page) showGuidePage(page);
+    });
+  });
+
+  // Show guide automatically on first use
+  const guideState = await chrome.storage.local.get(SEEN_GUIDE_KEY);
+  if (!guideState[SEEN_GUIDE_KEY]) {
+    openGuide(1);
+  }
 
   // Load saved app URL
   const stored = await chrome.storage.local.get(APP_URL_KEY);
