@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Outreach Platform - Executive Brief</title>
+<style>
+  @page {
+    margin: 0.75in 1in;
+    size: letter;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.75in 1in;
+    background: #fff;
+  }
+
+  /* Header */
+  .header {
+    border-bottom: 3px solid #0a66c2;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+  .header h1 {
+    font-size: 26px;
+    color: #0a66c2;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header .subtitle {
+    font-size: 15px;
+    color: #555;
+    font-style: italic;
+  }
+  .header .meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  /* Sections */
+  h2 {
+    font-size: 18px;
+    color: #0a66c2;
+    margin: 28px 0 12px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #d0d0d0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  h3 {
+    font-size: 15px;
+    color: #333;
+    margin: 16px 0 6px 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+  }
+  p {
+    font-size: 13.5px;
+    margin-bottom: 10px;
+    text-align: justify;
+  }
+
+  /* Callout box */
+  .callout {
+    background: #f0f6ff;
+    border-left: 4px solid #0a66c2;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout p {
+    font-size: 13.5px;
+    margin: 0;
+    font-style: italic;
+    color: #333;
+  }
+
+  /* Workflow steps */
+  .workflow {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    gap: 0;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .step-number {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 50%;
+    background: #0a66c2;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .step-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+    color: #333;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .step-desc {
+    font-size: 11px;
+    color: #666;
+    margin-top: 3px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .arrow {
+    flex: 0 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0a66c2;
+    font-size: 22px;
+    padding-bottom: 20px;
+  }
+
+  /* Sequence timeline */
+  .timeline {
+    margin: 14px 0;
+    padding: 0;
+  }
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .timeline-day {
+    flex: 0 0 60px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0a66c2;
+    padding-top: 2px;
+  }
+  .timeline-content {
+    flex: 1;
+    font-size: 12.5px;
+    color: #444;
+    border-left: 2px solid #d0d8e8;
+    padding-left: 14px;
+  }
+  .timeline-content strong {
+    color: #1a1a1a;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12.5px;
+  }
+  th {
+    background: #0a66c2;
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+  }
+  tr:nth-child(even) td {
+    background: #f8f9fa;
+  }
+
+  /* Checklist */
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  .checklist li {
+    font-size: 13px;
+    padding: 5px 0 5px 24px;
+    position: relative;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+  }
+  .checklist li::before {
+    content: "\2610";
+    position: absolute;
+    left: 0;
+    color: #0a66c2;
+    font-size: 16px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 2px solid #0a66c2;
+    font-size: 11px;
+    color: #888;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-align: center;
+  }
+
+  /* Print */
+  @media print {
+    body { padding: 0; }
+    .workflow { break-inside: avoid; }
+    h2 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LinkedIn Outreach Platform</h1>
+  <div class="subtitle">AI-Powered Personalized Outreach at Scale</div>
+  <div class="meta">Prepared by Three Bears Data &nbsp;|&nbsp; Confidential</div>
+</div>
+
+<h2>The Problem</h2>
+<p>
+B2B sales teams waste significant time crafting individual LinkedIn messages that often read as generic templates. The result: low response rates, inconsistent follow-up, and missed pipeline opportunities. Meanwhile, your team's LinkedIn network represents thousands of untapped, high-value relationships.
+</p>
+
+<h2>The Solution</h2>
+<p>
+Our LinkedIn Outreach Platform transforms your existing LinkedIn connections into a structured, AI-personalized outreach pipeline. It generates tailored multi-message sequences for each prospect&mdash;adapting tone, content, and timing based on the relationship context&mdash;and delivers them in a ready-to-send format.
+</p>
+
+<div class="callout">
+  <p>"Instead of one generic template blasted to hundreds of contacts, every prospect receives a sequence that references their specific role, company, and industry&mdash;written in seconds, not hours."</p>
+</div>
+
+<h2>How It Works</h2>
+
+<div class="workflow">
+  <div class="step">
+    <span class="step-number">1</span>
+    <span class="step-label">Import</span>
+    <span class="step-desc">Pull contacts from LinkedIn</span>
+  </div>
+  <div class="arrow">&rarr;</div>
+  <div class="step">
+    <span class="step-number">2</span>
+    <span class="step-label">Organize</span>
+    <span class="step-desc">Filter &amp; segment prospects</span>
+  </div>
+  <div class="arrow">&rarr;</div>
+  <div class="step">
+    <span class="step-number">3</span>
+    <span class="step-label">Generate</span>
+    <span class="step-desc">AI writes personalized sequences</span>
+  </div>
+  <div class="arrow">&rarr;</div>
+  <div class="step">
+    <span class="step-number">4</span>
+    <span class="step-label">Send</span>
+    <span class="step-desc">Review, edit &amp; deploy</span>
+  </div>
+</div>
+
+<h3>Step 1: Import Your LinkedIn Connections</h3>
+<p>
+Install our lightweight Chrome extension. With one click from your LinkedIn connections page, it imports your contacts&mdash;names, titles, companies, and connection dates&mdash;directly into the platform. You can also upload a CSV export from Sales Navigator or any spreadsheet.
+</p>
+
+<h3>Step 2: Organize &amp; Segment Your Prospects</h3>
+<p>
+The platform automatically deduplicates contacts and organizes them into a searchable, filterable database. Segment by company, title, industry, or status. Select the exact prospects you want to target for a campaign.
+</p>
+
+<h3>Step 3: Generate Personalized Sequences</h3>
+<p>
+Select your prospects and choose an outreach style&mdash;<strong>Cold</strong>, <strong>Warm</strong>, or <strong>Referral</strong>&mdash;based on your relationship. The AI engine generates a complete 4-message sequence for each contact, personalized to their role, company, and industry. Hundreds of unique sequences are created in minutes.
+</p>
+
+<h3>Step 4: Review &amp; Deploy</h3>
+<p>
+Review each generated sequence in the platform. Edit any message to add a personal touch. Then copy and send through LinkedIn at the recommended cadence. The dashboard tracks progress across all your active outreach.
+</p>
+
+<h2>The Outreach Sequence</h2>
+<p>Each prospect receives a structured 4-touch sequence over 14 days:</p>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="timeline-day">Day 0</div>
+    <div class="timeline-content"><strong>Connection Request</strong> &mdash; A concise, personalized message referencing their role and a relevant industry insight. Ends with a qualifying question to spark conversation.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-day">Day 3</div>
+    <div class="timeline-content"><strong>Follow-Up #1</strong> &mdash; Shares a specific data point or trend relevant to their industry. Positions your team as a thought partner, not a vendor.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-day">Day 7</div>
+    <div class="timeline-content"><strong>Follow-Up #2</strong> &mdash; References a relevant case study and offers a complimentary assessment. Provides a clear, low-friction next step.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-day">Day 14</div>
+    <div class="timeline-content"><strong>Friendly Close</strong> &mdash; A brief, respectful wrap-up that leaves the door open. No pressure, no false urgency&mdash;just a standing invitation to connect.</div>
+  </div>
+</div>
+
+<h2>Three Outreach Styles</h2>
+
+<table>
+  <tr>
+    <th>Style</th>
+    <th>When to Use</th>
+    <th>Tone</th>
+  </tr>
+  <tr>
+    <td><strong>Cold</strong></td>
+    <td>No prior relationship; identified as a target prospect</td>
+    <td>Insight-led, professional, value-first</td>
+  </tr>
+  <tr>
+    <td><strong>Warm</strong></td>
+    <td>Already connected on LinkedIn but haven't engaged</td>
+    <td>Conversational, references shared connection history</td>
+  </tr>
+  <tr>
+    <td><strong>Referral</strong></td>
+    <td>Introduced or referred by a mutual contact</td>
+    <td>Trust-based, leverages mutual relationship</td>
+  </tr>
+</table>
+
+<h2>What Makes This Different</h2>
+
+<table>
+  <tr>
+    <th>Traditional Approach</th>
+    <th>Our Platform</th>
+  </tr>
+  <tr>
+    <td>Copy-paste the same template to everyone</td>
+    <td>Every message is unique to the prospect's role and company</td>
+  </tr>
+  <tr>
+    <td>Manually track who you've messaged</td>
+    <td>Dashboard tracks status across all prospects automatically</td>
+  </tr>
+  <tr>
+    <td>Forget to follow up</td>
+    <td>Pre-built 4-message cadence with recommended timing</td>
+  </tr>
+  <tr>
+    <td>Hours writing individual messages</td>
+    <td>Hundreds of personalized sequences generated in minutes</td>
+  </tr>
+  <tr>
+    <td>No consistency across the team</td>
+    <td>Multi-user support with individual logins and shared methodology</td>
+  </tr>
+</table>
+
+<h2>Getting Started</h2>
+<p>Implementation is straightforward and requires no engineering resources:</p>
+
+<ul class="checklist">
+  <li>Sign in with your Google account at the platform URL</li>
+  <li>Install the Chrome extension (provided as a zip; takes 2 minutes)</li>
+  <li>Navigate to your LinkedIn connections page and click "Scrape to App"</li>
+  <li>Select your target prospects and choose an outreach style</li>
+  <li>Click "Generate" &mdash; review your personalized sequences</li>
+  <li>Begin sending on LinkedIn using the recommended cadence</li>
+</ul>
+
+<div class="callout">
+  <p><strong>Time to first outreach:</strong> Under 15 minutes from login to sending your first personalized sequence.</p>
+</div>
+
+<h2>Security &amp; Access</h2>
+<p>
+The platform is hosted on Vercel with enterprise-grade infrastructure. Authentication is handled via Google OAuth&mdash;no new passwords to manage. Each user's data is fully isolated. API keys for the Chrome extension are unique per user and can be regenerated at any time. No LinkedIn credentials are stored or requested.
+</p>
+
+<div class="footer">
+  Three Bears Data &nbsp;&bull;&nbsp; Confidential &nbsp;&bull;&nbsp; For internal use only
+</div>
+
+</body>
+</html>

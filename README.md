@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LinkedIn Outreach Platform
 
-## Getting Started
+AI-powered personalized LinkedIn outreach at scale. Import your connections, generate tailored multi-message sequences, and manage your entire outreach pipeline from a single dashboard.
 
-First, run the development server:
+Built for B2B sales teams at [Three Bears Data](https://threebearsdata.com).
+
+## Features
+
+- **One-Click LinkedIn Import** — Chrome extension scrapes your connections page directly into the platform
+- **CSV Upload** — Import from Sales Navigator, LinkedIn data exports, or any spreadsheet
+- **AI Sequence Generation** — Generates personalized 4-message outreach sequences per prospect using Claude or Gemini
+- **Three Outreach Styles** — Cold, Warm, and Referral modes with distinct tone and cadence
+- **Prospect Management** — Search, filter, bulk actions, deduplication, and status tracking
+- **Dashboard Analytics** — KPIs, status breakdown, top industries, and recent sequences at a glance
+- **Multi-User Support** — Google OAuth with per-user data isolation and API keys
+- **Demo Mode** — Full product experience without an AI API key using pre-built sample sequences
+
+## Quick Start
 
 ```bash
+# 1. Clone and install
+git clone <repo-url>
+cd linkedin-outreach-web
+npm install
+
+# 2. Configure environment
+cp .env.example .env.local
+# Edit .env.local with your values (see Environment Variables below)
+
+# 3. Set up the database
+npx drizzle-kit push
+
+# 4. Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and sign in with Google.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the project root:
 
-## Learn More
+```env
+# Database (required)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
 
-To learn more about Next.js, take a look at the following resources:
+# Auth (required)
+AUTH_SECRET=                    # Generate with: npx auth secret
+AUTH_GOOGLE_ID=                 # Google OAuth client ID
+AUTH_GOOGLE_SECRET=             # Google OAuth client secret
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# AI Provider (at least one required for live generation)
+AI_PROVIDER=gemini              # "gemini" or "anthropic"
+MODEL=gemini-2.0-flash          # Model ID (see docs/ARCHITECTURE.md for full list)
+GOOGLE_API_KEY=                 # Required if using Gemini
+ANTHROPIC_API_KEY=              # Required if using Anthropic
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> Without an AI API key the platform runs in **demo mode**, using pre-built sample sequences for the full product experience.
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Layer | Technology |
+|-------|-----------|
+| Framework | [Next.js 16](https://nextjs.org) (App Router) |
+| Language | TypeScript |
+| UI | [Tailwind CSS 4](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com), [Radix UI](https://radix-ui.com) |
+| Database | PostgreSQL via [Supabase](https://supabase.com) |
+| ORM | [Drizzle ORM](https://orm.drizzle.team) |
+| Auth | [NextAuth.js v5](https://authjs.dev) (Google OAuth) |
+| AI | [Anthropic Claude](https://docs.anthropic.com), [Google Gemini](https://ai.google.dev) |
+| CSV Parsing | [PapaParse](https://www.papaparse.com) |
+| Deployment | [Vercel](https://vercel.com) |
+| Extension | Chrome Manifest V3 |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+linkedin-outreach-web/
+├── src/
+│   ├── app/
+│   │   ├── (app)/                  # Authenticated app pages
+│   │   │   ├── page.tsx            # Dashboard
+│   │   │   ├── prospects/          # Prospect list + detail views
+│   │   │   ├── generate/           # Sequence generation UI
+│   │   │   ├── sequences/          # Sequence list view
+│   │   │   ├── settings/           # API key management + extension guide
+│   │   │   └── layout.tsx          # App shell with sidebar
+│   │   ├── login/                  # Login page
+│   │   └── api/
+│   │       ├── generate/           # POST — single sequence generation
+│   │       ├── generate-batch/     # POST — batch generation (up to 5 min)
+│   │       ├── import-connections/ # POST — Chrome extension import endpoint
+│   │       ├── auth/[...nextauth]/ # NextAuth route handlers
+│   │       └── health/             # GET — AI provider health check
+│   ├── lib/
+│   │   ├── ai-client.ts           # AI provider abstraction (Anthropic + Gemini)
+│   │   ├── auth.ts                # NextAuth configuration
+│   │   ├── csv-parser.ts          # CSV parsing + deduplication
+│   │   ├── models.ts              # AI model catalog + provider routing
+│   │   ├── product-knowledge.ts   # Three Bears Data product context
+│   │   ├── sample-sequences.ts    # Demo mode fallback templates
+│   │   ├── templates.ts           # Prompt variable filling engine
+│   │   ├── types.ts               # TypeScript interfaces
+│   │   ├── db/
+│   │   │   ├── index.ts           # Database connection (postgres.js + Drizzle)
+│   │   │   ├── schema.ts          # Table definitions (Drizzle schema)
+│   │   │   ├── queries.ts         # All database operations
+│   │   │   └── helpers.ts         # Auth helpers (getRequiredUser)
+│   │   └── prompts/
+│   │       ├── system.ts          # System prompt (product positioning + tone)
+│   │       ├── cold-outreach.ts   # Cold outreach generation prompt
+│   │       ├── warm-outreach.ts   # Warm outreach generation prompt
+│   │       └── referral-outreach.ts # Referral generation prompt
+│   └── components/
+│       ├── sidebar.tsx            # Main navigation sidebar
+│       ├── import-dialog.tsx      # CSV upload dialog
+│       ├── manual-add-form.tsx    # Manual prospect entry form
+│       ├── session-provider.tsx   # NextAuth session wrapper
+│       └── ui/                    # shadcn/ui primitives
+├── extension/                     # Chrome extension
+│   ├── manifest.json              # Manifest V3 config
+│   ├── popup.html / popup.js      # Extension popup UI
+│   ├── content.js                 # LinkedIn page content script
+│   └── icons/                     # Extension icons
+├── drizzle/                       # Generated migration files
+├── drizzle.config.ts              # Drizzle Kit config
+├── package.json
+└── .env.example
+```
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, data flow, database schema, AI pipeline |
+| [API Reference](docs/API.md) | All endpoints, request/response formats, authentication |
+| [Setup & Deployment](docs/SETUP.md) | Local dev, database, OAuth, Vercel deployment |
+| [Chrome Extension](docs/CHROME_EXTENSION.md) | Extension installation, usage, and development |
+
+## Scripts
+
+```bash
+npm run dev       # Start development server
+npm run build     # Production build
+npm run start     # Start production server
+npm run lint      # Run ESLint
+npx drizzle-kit push      # Push schema changes to database
+npx drizzle-kit generate  # Generate migration files
+npx drizzle-kit studio    # Open Drizzle Studio (database GUI)
+```
+
+## How It Works
+
+```
+┌─────────────┐     ┌──────────────┐     ┌────────────────┐     ┌──────────────┐
+│   Import     │     │   Organize   │     │    Generate     │     │    Review     │
+│              │────>│              │────>│                │────>│              │
+│ Extension or │     │ Filter, tag, │     │ AI writes 4-msg│     │ Edit, copy,  │
+│ CSV upload   │     │ deduplicate  │     │ sequences      │     │ send on LI   │
+└─────────────┘     └──────────────┘     └────────────────┘     └──────────────┘
+```
+
+1. **Import** — Pull contacts from LinkedIn via the Chrome extension or upload a CSV
+2. **Organize** — Filter and segment your prospects by company, title, industry, or status
+3. **Generate** — Select prospects, choose a style (Cold/Warm/Referral), and let AI write personalized sequences
+4. **Review & Send** — Review generated messages, make edits, then copy and send through LinkedIn
+
+## License
+
+Private. All rights reserved.
