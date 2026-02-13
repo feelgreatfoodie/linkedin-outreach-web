@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useProspects } from '@/hooks/use-prospects';
 import { useSequences } from '@/hooks/use-sequences';
@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Trash2, ChevronDown, ExternalLink, Search } from 'lucide-react';
+import { deduplicateProspects } from '@/lib/csv-parser';
 import type { Prospect, ProspectStatus } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -49,6 +50,28 @@ export default function ProspectsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
+
+  // Check for pending extension import
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/import-connections')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.pending && data.prospects?.length > 0) {
+          const { added, duplicates } = deduplicateProspects(prospects, data.prospects);
+          if (added.length > 0) {
+            addProspects(added);
+            toast.success(
+              `Imported ${added.length} connections from extension` +
+                (duplicates.length > 0 ? ` (${duplicates.length} duplicates skipped)` : '')
+            );
+          } else if (duplicates.length > 0) {
+            toast.info(`All ${duplicates.length} connections already imported`);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const companies = useMemo(() => {
     const set = new Set(prospects.map((p) => p.company).filter(Boolean));
