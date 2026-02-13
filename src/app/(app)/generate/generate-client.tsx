@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useProspects } from '@/hooks/use-prospects';
-import { useSequences } from '@/hooks/use-sequences';
 import { sampleSequences } from '@/lib/sample-sequences';
 import { fillTemplate } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
@@ -23,12 +21,14 @@ import { Sparkles, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import type { Prospect, OutreachStyle, Sequence } from '@/lib/types';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
+import { saveSequencesAction } from './actions';
 
-function GeneratePageContent() {
+interface GenerateClientProps {
+  prospects: Prospect[];
+}
+
+function GenerateContent({ prospects }: GenerateClientProps) {
   const searchParams = useSearchParams();
-  const { prospects, updateStatus } = useProspects();
-  const { addSequences } = useSequences();
-
   const preselectedIds = searchParams.get('ids')?.split(',').filter(Boolean) || [];
 
   const [selected, setSelected] = useState<Set<string>>(new Set(preselectedIds));
@@ -54,7 +54,7 @@ function GeneratePageContent() {
     });
   };
 
-  const findSampleSequence = (prospect: Prospect, outreachStyle: OutreachStyle): Sequence | null => {
+  const findSampleSequence = (prospect: Prospect, outreachStyle: OutreachStyle): Sequence => {
     const match = sampleSequences.find((s) => {
       if (s.style !== outreachStyle) return false;
       if (s.industry !== '*' && s.industry.toLowerCase() !== prospect.industry.toLowerCase()) return false;
@@ -62,7 +62,6 @@ function GeneratePageContent() {
       return true;
     });
 
-    // Fallback to generic
     const template = match || sampleSequences.find((s) => s.style === outreachStyle) || sampleSequences[0];
 
     return {
@@ -95,7 +94,6 @@ function GeneratePageContent() {
     setResults(null);
 
     try {
-      // Try real API first
       const response = await fetch('/api/generate-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,12 +102,13 @@ function GeneratePageContent() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Fallback to demo mode on API key errors
         if (response.status === 500 && errorData.error?.includes('API key')) {
           toast.info('Using demo mode (no API key configured)');
-          const demoSequences = selectedProspects.map((p) => findSampleSequence(p, style)!);
-          addSequences(demoSequences);
-          updateStatus(selectedProspects.map((p) => p.id), 'sequenced');
+          const demoSequences = selectedProspects.map((p) => findSampleSequence(p, style));
+          await saveSequencesAction(
+            demoSequences,
+            demoSequences.map((s) => s.prospectId)
+          );
           setResults({ success: demoSequences, errors: [] });
           return;
         }
@@ -118,8 +117,10 @@ function GeneratePageContent() {
 
       const data = await response.json();
       if (data.results?.length > 0) {
-        addSequences(data.results);
-        updateStatus(data.results.map((s: Sequence) => s.prospectId), 'sequenced');
+        await saveSequencesAction(
+          data.results,
+          data.results.map((s: Sequence) => s.prospectId)
+        );
       }
       setResults({ success: data.results || [], errors: data.errors || [] });
 
@@ -129,12 +130,13 @@ function GeneratePageContent() {
       if (data.errors?.length > 0) {
         toast.error(`${data.errors.length} failed`);
       }
-    } catch (err) {
-      // Fallback to demo
+    } catch {
       toast.info('Using demo mode');
-      const demoSequences = selectedProspects.map((p) => findSampleSequence(p, style)!);
-      addSequences(demoSequences);
-      updateStatus(selectedProspects.map((p) => p.id), 'sequenced');
+      const demoSequences = selectedProspects.map((p) => findSampleSequence(p, style));
+      await saveSequencesAction(
+        demoSequences,
+        demoSequences.map((s) => s.prospectId)
+      );
       setResults({ success: demoSequences, errors: [] });
     } finally {
       setGenerating(false);
@@ -150,7 +152,6 @@ function GeneratePageContent() {
         </p>
       </div>
 
-      {/* Results */}
       {results && (
         <Card>
           <CardHeader>
@@ -206,7 +207,6 @@ function GeneratePageContent() {
         </Card>
       )}
 
-      {/* Config */}
       {!results && (
         <>
           <div className="flex items-center gap-4">
@@ -242,7 +242,6 @@ function GeneratePageContent() {
             </div>
           )}
 
-          {/* Prospect Picker */}
           {prospects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
@@ -307,10 +306,10 @@ function GeneratePageContent() {
   );
 }
 
-export default function GeneratePage() {
+export function GenerateClient({ prospects }: GenerateClientProps) {
   return (
     <Suspense fallback={<div className="flex items-center justify-center py-20"><p className="text-muted-foreground">Loading...</p></div>}>
-      <GeneratePageContent />
+      <GenerateContent prospects={prospects} />
     </Suspense>
   );
 }

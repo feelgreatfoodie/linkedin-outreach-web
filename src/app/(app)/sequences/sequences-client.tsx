@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSequences } from '@/hooks/use-sequences';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Copy, ChevronDown, ChevronUp, Search, Sparkles } from 'lucide-react';
-import type { OutreachStyle } from '@/lib/types';
+import type { OutreachStyle, Sequence } from '@/lib/types';
 import { toast } from 'sonner';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -38,8 +37,11 @@ const STYLE_COLORS: Record<OutreachStyle, string> = {
   referral: 'bg-green-100 text-green-800',
 };
 
-export default function SequencesPage() {
-  const { sequences, hydrated } = useSequences();
+interface SequencesClientProps {
+  sequences: Sequence[];
+}
+
+export function SequencesClient({ sequences }: SequencesClientProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [styleFilter, setStyleFilter] = useState<string>('all');
@@ -84,14 +86,6 @@ export default function SequencesPage() {
     navigator.clipboard.writeText(text);
     toast.success('All messages copied');
   };
-
-  if (!hydrated) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -164,7 +158,7 @@ export default function SequencesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className={STYLE_COLORS[seq.style]}>
+                    <Badge variant="secondary" className={STYLE_COLORS[seq.style as OutreachStyle]}>
                       {seq.style}
                     </Badge>
                     <Badge variant="outline">

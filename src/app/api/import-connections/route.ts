@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { nanoid } from 'nanoid';
-import type { Prospect } from '@/lib/types';
+import { auth } from '@/lib/auth';
+import { getUserByApiKey, createProspects } from '@/lib/db/queries';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // Preflight for Chrome extension CORS
@@ -19,9 +19,6 @@ interface ConnectionPayload {
   url: string;
   connectedOn: string;
 }
-
-// In-memory store for the most recent import (single-user app)
-let pendingImport: Prospect[] | null = null;
 
 function splitName(fullName: string): { firstName: string; lastName: string } {
   const parts = fullName.trim().split(/\s+/);
@@ -50,9 +47,35 @@ function parseTitle(rawTitle: string): { jobTitle: string; company: string } {
   return { jobTitle, company };
 }
 
-// POST: Receive connections from the Chrome extension
+/**
+ * Authenticate via session (web) or API key (extension).
+ * Returns the userId or null.
+ */
+async function resolveUserId(req: NextRequest): Promise<string | null> {
+  // 1. Try API key from Authorization header (Chrome extension)
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const apiKey = authHeader.slice(7);
+    const user = await getUserByApiKey(apiKey);
+    return user?.id ?? null;
+  }
+
+  // 2. Try session (web app)
+  const session = await auth();
+  return session?.user?.id ?? null;
+}
+
+// POST: Receive connections from the Chrome extension or web
 export async function POST(req: NextRequest) {
   try {
+    const userId = await resolveUserId(req);
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Provide a valid API key or sign in.' },
+        { status: 401, headers: CORS_HEADERS }
+      );
+    }
+
     const body = await req.json();
     const connections: ConnectionPayload[] = body.connections;
 
@@ -63,12 +86,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prospects: Prospect[] = connections.map((conn) => {
+    const prospectData = connections.map((conn) => {
       const { firstName, lastName } = splitName(conn.name);
       const { jobTitle, company } = parseTitle(conn.title || '');
 
       return {
-        id: nanoid(10),
         firstName,
         lastName,
         title: jobTitle,
@@ -79,18 +101,17 @@ export async function POST(req: NextRequest) {
         linkedinUrl: conn.url || '',
         connectedOn: conn.connectedOn || '',
         notes: '',
-        status: 'new',
+        status: 'new' as const,
         importedAt: new Date().toISOString(),
       };
     });
 
-    // Store for GET pickup
-    pendingImport = prospects;
+    const created = await createProspects(userId, prospectData);
 
     return NextResponse.json({
-      added: prospects.length,
+      added: created.length,
       duplicates: 0,
-      message: `Imported ${prospects.length} connections. Open the app to see them.`,
+      message: `Imported ${created.length} connections.`,
     }, { headers: CORS_HEADERS });
   } catch {
     return NextResponse.json(
@@ -98,16 +119,4 @@ export async function POST(req: NextRequest) {
       { status: 400, headers: CORS_HEADERS }
     );
   }
-}
-
-// GET: Retrieve pending import (called by the web app frontend)
-export async function GET() {
-  if (!pendingImport) {
-    return NextResponse.json({ prospects: [], pending: false }, { headers: CORS_HEADERS });
-  }
-
-  const prospects = pendingImport;
-  pendingImport = null; // Clear after pickup
-
-  return NextResponse.json({ prospects, pending: true }, { headers: CORS_HEADERS });
 }

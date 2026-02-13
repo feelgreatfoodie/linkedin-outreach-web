@@ -359,6 +359,17 @@
       </p>
     </div>
 
+    <div class="config">
+      <div class="label-row">
+        <label for="api-key">API Key</label>
+        <span class="label-hint" id="key-help-link">Where do I find this?</span>
+      </div>
+      <input type="password" id="api-key" placeholder="key_..." />
+      <p class="url-hint">
+        Paste your API key from the Settings page of the app
+      </p>
+    </div>
+
     <button id="scrape-btn" class="btn btn-primary">
       Scrape &amp; Send to App
     </button>
@@ -421,7 +432,7 @@
       </div>
     </div>
 
-    <!-- Page 2: App URL -->
+    <!-- Page 2: App URL + API Key -->
     <div class="guide-page" id="guide-page-2">
       <div class="step">
         <div class="step-num">3</div>
@@ -436,8 +447,18 @@
             <div class="step-callout warning">
               <strong>Important:</strong> The default value is <code>http://localhost:3000</code> which only works if you are running the app on your own computer. For the live/deployed version, you <strong>must</strong> replace this with your actual app URL.
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Paste your API Key</div>
+          <div class="step-desc">
+            Sign in to the app, go to <strong>Settings</strong>, and copy your API Key. Paste it into the <strong>API Key</strong> field in this extension.
             <div class="step-callout tip">
-              <strong>Where do I find my URL?</strong> It's the web address you see in your browser's address bar when you open the LinkedIn Outreach app. Copy the whole thing (starting with https://) and paste it into the App URL field.
+              <strong>Why do I need this?</strong> The API key links your scraped connections to your account. Without it, the app won't know who you are.
             </div>
           </div>
         </div>
@@ -447,7 +468,7 @@
     <!-- Page 3: Scrape -->
     <div class="guide-page" id="guide-page-3">
       <div class="step">
-        <div class="step-num">4</div>
+        <div class="step-num">5</div>
         <div class="step-content">
           <div class="step-title">Click "Scrape &amp; Send to App"</div>
           <div class="step-desc">
@@ -470,7 +491,7 @@
     <!-- Page 4: Done -->
     <div class="guide-page" id="guide-page-4">
       <div class="step">
-        <div class="step-num">5</div>
+        <div class="step-num">6</div>
         <div class="step-content">
           <div class="step-title">View your connections in the app</div>
           <div class="step-desc">

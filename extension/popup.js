@@ -1,4 +1,5 @@
 const APP_URL_KEY = 'outreach_app_url';
+const API_KEY_KEY = 'outreach_api_key';
 const SEEN_GUIDE_KEY = 'outreach_seen_guide';
 const DEFAULT_URL = 'https://linkedin-outreach-web.vercel.app';
 
@@ -67,13 +68,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     openGuide(1);
   }
 
-  // Load saved app URL
-  const stored = await chrome.storage.local.get(APP_URL_KEY);
+  const apiKeyInput = document.getElementById('api-key');
+  const keyHelpLink = document.getElementById('key-help-link');
+  if (keyHelpLink) keyHelpLink.addEventListener('click', () => openGuide(2));
+
+  // Load saved app URL and API key
+  const stored = await chrome.storage.local.get([APP_URL_KEY, API_KEY_KEY]);
   appUrlInput.value = stored[APP_URL_KEY] || DEFAULT_URL;
+  apiKeyInput.value = stored[API_KEY_KEY] || '';
 
   // Save URL on change
   appUrlInput.addEventListener('change', () => {
     chrome.storage.local.set({ [APP_URL_KEY]: appUrlInput.value.trim() });
+  });
+
+  // Save API key on change
+  apiKeyInput.addEventListener('change', () => {
+    chrome.storage.local.set({ [API_KEY_KEY]: apiKeyInput.value.trim() });
   });
 
   // Check if we're on the right page
@@ -121,9 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       setProgress(90);
 
       const appUrl = (appUrlInput.value.trim() || DEFAULT_URL).replace(/\/+$/, '');
+      const apiKey = apiKeyInput.value.trim();
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
       const res = await fetch(`${appUrl}/api/import-connections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ connections }),
       });
 

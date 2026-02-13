@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useProspects } from '@/hooks/use-prospects';
-import { useSequences } from '@/hooks/use-sequences';
+import { useState, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -16,9 +15,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Download,
-  Upload,
-  Trash2,
   CheckCircle,
   XCircle,
   Chrome,
@@ -28,8 +24,12 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Key,
+  RefreshCw,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { regenerateApiKeyAction, migrateLocalDataAction } from './actions';
 
 const APP_URL = 'https://linkedin-outreach-web.vercel.app';
 
@@ -112,35 +112,25 @@ const GUIDE_STEPS = [
     ),
   },
   {
-    title: 'Set Your App URL',
+    title: 'Set Your App URL & API Key',
     content: (
       <>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          The extension needs to know where to send your connections. This is the most important step!
+          The extension needs your App URL and API key to send connections to your account.
         </p>
         <ol className="mt-3 space-y-3 text-sm">
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-            <div>
-              Go to any LinkedIn page and click the extension icon in your toolbar
-            </div>
+            <div>Click the extension icon in your toolbar</div>
           </li>
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-            <div>
-              Find the <strong>&quot;App URL&quot;</strong> field at the top of the popup
-            </div>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-            <div>
-              <strong>Replace</strong> whatever is there with your app&apos;s URL. Copy it from below:
-            </div>
+            <div>Paste your <strong>App URL</strong> and <strong>API Key</strong> (copy both from the Settings page below)</div>
           </li>
         </ol>
         <CopyableUrl url={APP_URL} />
         <div className="mt-4 rounded-md border-l-4 border-red-400 bg-red-50 p-3 text-xs text-red-900">
-          <strong>Don&apos;t skip this!</strong> If you leave the default <code className="rounded bg-red-100 px-1">http://localhost:3000</code> in the field, the extension will try to send data to your computer instead of the real app, and it won&apos;t work.
+          <strong>Don&apos;t skip the API Key!</strong> Without it, the extension can&apos;t link connections to your account.
         </div>
       </>
     ),
@@ -169,28 +159,15 @@ const GUIDE_STEPS = [
           </li>
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-            <div>
-              Click the extension icon in your toolbar &mdash; you should see the &quot;Scrape &amp; Send to App&quot; button
-            </div>
+            <div>Click the extension icon, then press <strong>&quot;Scrape &amp; Send to App&quot;</strong></div>
           </li>
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-            <div>
-              Click <strong>&quot;Scrape &amp; Send to App&quot;</strong> and wait for it to finish
-            </div>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span>
-            <div>
-              Come back to this app and go to the <strong>Prospects</strong> page &mdash; your connections will be there!
-            </div>
+            <div>Come back here and check the <strong>Prospects</strong> page!</div>
           </li>
         </ol>
-        <div className="mt-4 rounded-md border-l-4 border-blue-400 bg-blue-50 p-3 text-xs text-blue-900">
-          <strong>Keep the tab open!</strong> Don&apos;t close the LinkedIn tab while it&apos;s scraping. A progress bar will show you how far along it is. Large accounts (1000+ connections) may take up to 5 minutes.
-        </div>
         <div className="mt-3 rounded-md border-l-4 border-green-500 bg-green-50 p-3 text-xs text-green-900">
-          <strong>That&apos;s it!</strong> Once imported, you can filter, select, and generate personalized outreach sequences for any of your connections.
+          <strong>That&apos;s it!</strong> Your connections are now linked to your account and saved to the database.
         </div>
       </>
     ),
@@ -209,6 +186,32 @@ function CopyableUrl({ url }: { url: string }) {
   return (
     <div className="mt-3 flex items-center gap-2 rounded-md border bg-muted/50 p-2.5">
       <code className="flex-1 text-xs font-medium break-all">{url}</code>
+      <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2" onClick={handleCopy}>
+        {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+      </Button>
+    </div>
+  );
+}
+
+function CopyableApiKey({ apiKey }: { apiKey: string }) {
+  const [copied, setCopied] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success('API key copied');
+  };
+
+  const display = visible ? apiKey : apiKey.slice(0, 8) + '\u2022'.repeat(24);
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-2.5">
+      <code className="flex-1 text-xs font-medium break-all font-mono">{display}</code>
+      <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2" onClick={() => setVisible(!visible)}>
+        <span className="text-xs">{visible ? 'Hide' : 'Show'}</span>
+      </Button>
       <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2" onClick={handleCopy}>
         {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
       </Button>
@@ -245,7 +248,6 @@ function SetupGuideDialog() {
 
         <div className="py-2">{current.content}</div>
 
-        {/* Step dots */}
         <div className="flex justify-center gap-1.5 py-2">
           {GUIDE_STEPS.map((_, i) => (
             <button
@@ -272,7 +274,6 @@ function SetupGuideDialog() {
             size="sm"
             onClick={() => {
               if (isLast) {
-                // Close dialog by clicking the hidden close button
                 const closeBtn = document.querySelector('[data-slot="dialog-close"]');
                 if (closeBtn instanceof HTMLElement) closeBtn.click();
               } else {
@@ -289,9 +290,12 @@ function SetupGuideDialog() {
   );
 }
 
-export default function SettingsPage() {
-  const { prospects, setProspects } = useProspects();
-  const { sequences, setSequences } = useSequences();
+interface SettingsClientProps {
+  apiKey: string | null;
+  hasDbData: boolean;
+}
+
+export function SettingsClient({ apiKey, hasDbData }: SettingsClientProps) {
   const [health, setHealth] = useState<{
     provider: string;
     providerName: string;
@@ -299,6 +303,10 @@ export default function SettingsPage() {
     modelLabel: string;
     configured: boolean;
   } | null>(null);
+  const [currentApiKey, setCurrentApiKey] = useState(apiKey);
+  const [isPending, startTransition] = useTransition();
+  const [localDataCount, setLocalDataCount] = useState<{ prospects: number; sequences: number } | null>(null);
+  const [migrated, setMigrated] = useState(false);
 
   useEffect(() => {
     fetch('/api/health')
@@ -307,50 +315,48 @@ export default function SettingsPage() {
       .catch(() => {});
   }, []);
 
-  const handleExport = () => {
-    const data = {
-      prospects,
-      sequences,
-      exportedAt: new Date().toISOString(),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `outreach-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Data exported');
+  // Detect localStorage data for migration
+  useEffect(() => {
+    if (hasDbData) return;
+    try {
+      const storedProspects = window.localStorage.getItem('outreach:prospects');
+      const storedSequences = window.localStorage.getItem('outreach:sequences');
+      const prospects = storedProspects ? JSON.parse(storedProspects) : [];
+      const sequences = storedSequences ? JSON.parse(storedSequences) : [];
+      if (prospects.length > 0 || sequences.length > 0) {
+        setLocalDataCount({ prospects: prospects.length, sequences: sequences.length });
+      }
+    } catch {
+      // ignore
+    }
+  }, [hasDbData]);
+
+  const handleRegenerate = () => {
+    startTransition(async () => {
+      const newKey = await regenerateApiKeyAction();
+      setCurrentApiKey(newKey);
+      toast.success('API key regenerated');
+    });
   };
 
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const data = JSON.parse(ev.target?.result as string);
-          if (data.prospects) setProspects(data.prospects);
-          if (data.sequences) setSequences(data.sequences);
-          toast.success('Data imported');
-        } catch {
-          toast.error('Invalid backup file');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  };
+  const handleMigrate = () => {
+    startTransition(async () => {
+      try {
+        const storedProspects = window.localStorage.getItem('outreach:prospects');
+        const storedSequences = window.localStorage.getItem('outreach:sequences');
+        const prospects = storedProspects ? JSON.parse(storedProspects) : [];
+        const sequences = storedSequences ? JSON.parse(storedSequences) : [];
 
-  const handleClear = () => {
-    if (!confirm('This will delete all prospects and sequences. Are you sure?')) return;
-    setProspects([]);
-    setSequences([]);
-    toast.success('All data cleared');
+        const result = await migrateLocalDataAction(prospects, sequences);
+        window.localStorage.removeItem('outreach:prospects');
+        window.localStorage.removeItem('outreach:sequences');
+        setMigrated(true);
+        setLocalDataCount(null);
+        toast.success(`Migrated ${result.prospects} prospects`);
+      } catch {
+        toast.error('Migration failed');
+      }
+    });
   };
 
   return (
@@ -358,9 +364,58 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          AI provider configuration, data management, and tools
+          API keys, AI provider configuration, and tools
         </p>
       </div>
+
+      {/* localStorage Migration */}
+      {localDataCount && !migrated && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowUpFromLine className="h-5 w-5 text-amber-600" />
+              Migrate Local Data
+            </CardTitle>
+            <CardDescription>
+              Found {localDataCount.prospects} prospects and {localDataCount.sequences} sequences in browser storage.
+              Migrate them to your account so they&apos;re saved permanently.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleMigrate} disabled={isPending}>
+              <ArrowUpFromLine className="mr-2 h-4 w-4" />
+              {isPending ? 'Migrating...' : 'Migrate my data'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* API Key */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            API Key
+          </CardTitle>
+          <CardDescription>
+            Use this key in the Chrome extension to link scraped connections to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {currentApiKey ? (
+            <CopyableApiKey apiKey={currentApiKey} />
+          ) : (
+            <p className="text-sm text-muted-foreground">No API key generated yet</p>
+          )}
+          <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={isPending}>
+            <RefreshCw className="mr-1 h-3 w-3" />
+            Regenerate
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Regenerating will invalidate the old key. Update it in the Chrome extension after regenerating.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* AI Provider */}
       <Card>
@@ -430,7 +485,6 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Quick Start */}
           <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
             <h3 className="mb-3 text-sm font-semibold">Quick Start</h3>
             <div className="space-y-2.5 text-sm text-muted-foreground">
@@ -445,6 +499,10 @@ export default function SettingsPage() {
               <CopyableUrl url={APP_URL} />
               <div className="flex items-start gap-3">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">3</span>
+                <span>Paste your <strong>API Key</strong> from the section above</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">4</span>
                 <span>
                   Go to your{' '}
                   <a
@@ -457,10 +515,6 @@ export default function SettingsPage() {
                   </a>
                   , click the extension, and press <strong>&quot;Scrape &amp; Send to App&quot;</strong>
                 </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">4</span>
-                <span>Come back here and check the <strong>Prospects</strong> page &mdash; your connections are ready!</span>
               </div>
             </div>
           </div>
@@ -477,49 +531,6 @@ export default function SettingsPage() {
               <li>Duplicate connections are automatically skipped on import</li>
               <li>You can also click &quot;Download CSV Instead&quot; to get a spreadsheet file</li>
             </ul>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Management</CardTitle>
-          <CardDescription>
-            Export, import, or clear your data. All data is stored in your browser.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Current data</p>
-              <p className="text-xs text-muted-foreground">
-                {prospects.length} prospects, {sequences.length} sequences
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="mr-1 h-3 w-3" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleImport}>
-                <Upload className="mr-1 h-3 w-3" />
-                Import
-              </Button>
-            </div>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-destructive">Clear all data</p>
-              <p className="text-xs text-muted-foreground">
-                Permanently delete all prospects and sequences
-              </p>
-            </div>
-            <Button variant="destructive" size="sm" onClick={handleClear}>
-              <Trash2 className="mr-1 h-3 w-3" />
-              Clear All
-            </Button>
           </div>
         </CardContent>
       </Card>
